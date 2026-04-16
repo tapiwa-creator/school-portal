@@ -8,6 +8,7 @@ import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { doc, setDoc, Timestamp, collection, query, where, getDocs } from "firebase/firestore";
 import { AlertTriangle, GraduationCap } from "lucide-react";
 
+
 const CreateAccount = () => {
   const navigate = useNavigate();
   const [role, setRole] = useState("student");
