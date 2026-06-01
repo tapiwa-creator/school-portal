@@ -284,10 +284,12 @@ const Login = () => {
                 disabled={loading}
                 className="w-full bg-[#0d4a2f] hover:bg-[#1a6b43] text-white font-bold py-3 rounded-xl text-sm transition-all duration-200 shadow-md flex items-center justify-center gap-2 mt-2"
               >
+
+
                 {loading ? (
                   <>
                     <div className="loading-spinner"></div>
-                    <span>Signing in...</span>
+                    <span>Logging in...</span>
                   </>
                 ) : (
                   `Sign In as ${isAdmin ? "Admin" : "Student"} →`
