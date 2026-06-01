@@ -22,40 +22,6 @@ const gradeColor = (avg) =>
     avg >= 65 ? "bg-blue-100 text-blue-600" :
       avg >= 50 ? "bg-orange-100 text-orange-500" : "bg-red-100 text-red-500";
 
-// ── Greeting ───────────────────────────────────────────────────────────────
-const getTimeGreeting = () => {
-  const h = new Date().getHours();
-  if (h < 12) return "Good morning";
-  if (h < 17) return "Good afternoon";
-  return "Good evening";
-};
-
-/**
- * Derive a display name + optional title prefix from the auth user object.
- *
- * For STUDENTS  → use student record name (first name only) once loaded,
- *                  fall back to auth displayName / email prefix.
- * For ADMINS    → prepend Mr / Mrs / Miss based on title stored at
- *                  user.title | user.displayTitle | user.prefix
- *                  (whichever your sign-up flow persists).
- */
-function buildGreetingName(currentUser, studentRecord) {
-  // Student path — use first name from the student record if available
-  if (studentRecord?.name) {
-    return studentRecord.name.split(" ")[0];
-  }
-
-  // Auth displayName fallback
-  const raw = currentUser?.displayName || currentUser?.email?.split("@")[0] || "there";
-
-  // Admin title prefix  (adjust field names to match your Firestore user doc)
-  const title = currentUser?.title || currentUser?.displayTitle || currentUser?.prefix || "";
-  const firstName = raw.split(" ")[0];
-
-  if (title) return `${title} ${firstName}`;
-  return firstName;
-}
-
 // ── ProgressBar ────────────────────────────────────────────────────────────
 const ProgressBar = ({ value, max = 100, color = "bg-green-500", height = "h-2" }) => (
   <div className={`w-full ${height} bg-gray-100 rounded-full overflow-hidden`}>
@@ -94,7 +60,7 @@ function formatEventDate(iso) {
 // ── Main Component ─────────────────────────────────────────────────────────
 export default function DashboardPage() {
   const navigate = useNavigate();
-  const { currentUser } = useAuth();
+  const { currentUser, userProfile } = useAuth();
 
   // ── state ──
   const [student, setStudent] = useState(null);
@@ -181,9 +147,6 @@ export default function DashboardPage() {
     .sort((a, b) => new Date(a.eventDate) - new Date(b.eventDate))
     .slice(0, 4);
 
-  // ── Greeting ──────────────────────────────────────────────────────────
-  const greetingName = buildGreetingName(currentUser, student);
-
   return (
     <div className="min-h-screen bg-[#f0f4f0] p-3 md:p-6 space-y-4 md:space-y-6 font-sans pt-16 md:pt-6">
 
@@ -192,7 +155,7 @@ export default function DashboardPage() {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between px-5 md:px-8 py-5 md:py-7 gap-4">
           <div>
             <h1 className="text-white text-2xl md:text-3xl font-bold mb-1">
-              {getTimeGreeting()}, {greetingName}
+              Welcome, {userProfile?.fullName || userProfile?.name || currentUser?.displayName || "Student User"}
             </h1>
             <p className="text-green-300 text-xs md:text-sm">
               Term 1 · {new Date().getFullYear()} &nbsp;|&nbsp; Corner Stone Primary School

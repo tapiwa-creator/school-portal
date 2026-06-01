@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import AdminStudentService from "../../../service/admin/StudentManagementService";
+import { useAuth } from "../../../context/Authcontext";
 
 const STATUSES = ["All", "Active", "Pending"];
 
@@ -448,6 +449,7 @@ function StudentDrawer({ student, onClose, onUpdateStudent }) {
 // ── Main Component ─────────────────────────────────────────────────────────
 export default function ManageStudents() {
   const navigate = useNavigate();
+  const { userProfile } = useAuth();
   const [students, setStudents]         = useState([]);
   const [loading, setLoading]           = useState(true);
   const [search, setSearch]             = useState("");
@@ -462,10 +464,10 @@ export default function ManageStudents() {
     const unsubscribe = AdminStudentService.subscribeToStudents((data) => {
       setStudents(data);
       setLoading(false);
-    });
+    }, userProfile?.assignedGrade);
 
     return () => unsubscribe();
-  }, []);
+  }, [userProfile?.assignedGrade]);
 
   const fetchStudents = () => {};
 

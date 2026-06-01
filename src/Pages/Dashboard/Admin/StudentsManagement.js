@@ -3,11 +3,14 @@ import React, { useState, useEffect } from 'react';
 import { db } from '../../../Firebase/Firebase';
 import { collection, query, where, onSnapshot, doc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { Phone } from 'lucide-react';
+import { useAuth } from '../../../context/Authcontext';
+import AdminStudentService from '../../../service/admin/StudentManagementService';
 
 const GRADES = ['All', 'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6', 'Grade 7'];
 const STATUSES = ['All', 'Active', 'Pending', 'Inactive'];
 
 export default function AdminStudents() {
+  const { userProfile } = useAuth();
   const [students, setStudents] = useState(null);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -21,23 +24,15 @@ export default function AdminStudents() {
 
   // ── Real-time listener ────────────────────────────────────────────────────
   useEffect(() => {
-    const q = query(collection(db, 'users'), where('role', '==', 'student'));
-    const unsub = onSnapshot(
-      q,
-      (snap) => {
-        const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-        data.sort((a, b) => (a.fullName || '').localeCompare(b.fullName || ''));
-        setStudents(data);
-        setLoading(false);
-      },
-      (err) => {
-        console.error('[AdminStudents] snapshot error:', err);
-        setStudents([]);
-        setLoading(false);
-      }
-    );
+    setLoading(true);
+    const unsub = AdminStudentService.subscribeToStudents((data) => {
+      data.sort((a, b) => (a.fullName || '').localeCompare(b.fullName || ''));
+      setStudents(data);
+      setLoading(false);
+    }, userProfile?.assignedGrade);
+
     return () => unsub();
-  }, []);
+  }, [userProfile?.assignedGrade]);
 
   const safeStudents = students ?? [];
 
@@ -195,10 +190,21 @@ export default function AdminStudents() {
           </div>
         </div>
 
-        {/* List body */}
         {loading ? (
-          <div className="flex justify-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-900"></div>
+          <div className="divide-y divide-gray-50">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="p-5 flex items-start gap-4 animate-pulse">
+                <div className="w-10 h-10 rounded-full bg-gray-200 flex-shrink-0" />
+                <div className="flex-1 space-y-2 py-1">
+                  <div className="h-4 bg-gray-200 rounded w-1/4" />
+                  <div className="h-3 bg-gray-100 rounded w-1/3" />
+                  <div className="flex gap-2 mt-2">
+                    <div className="h-4 bg-gray-100 rounded-full w-16" />
+                    <div className="h-4 bg-gray-100 rounded-full w-16" />
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         ) : (
           <div className="divide-y divide-gray-50">

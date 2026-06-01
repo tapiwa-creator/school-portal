@@ -1,77 +1,119 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 
 const LandingPage = () => {
-  return (
-    <section className="bg-white min-h-screen flex items-center px-5 md:px-8 lg:px-20 py-10">
-      <div className="max-w-7xl mx-auto w-full grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center">
+  const imgRef = useRef(null);
 
-        {/* ── LEFT CONTENT ── */}
-        <div className="flex flex-col gap-5 md:gap-6">
+  useEffect(() => {
+    const els = document.querySelectorAll(".cs-reveal");
+    els.forEach((el, i) => {
+      el.style.opacity = "0";
+      el.style.transform = "translateY(18px)";
+      el.style.transition = `opacity 0.6s ease ${i * 0.1}s, transform 0.6s ease ${i * 0.1}s`;
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          el.style.opacity = "1";
+          el.style.transform = "translateY(0)";
+        }, 60);
+      });
+    });
+
+    const onScroll = () => {
+      if (imgRef.current) {
+        imgRef.current.style.transform = `scale(1.04) translateY(${window.scrollY * 0.05}px)`;
+      }
+    };
+    window.addEventListener("scroll", onScroll);
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  return (
+    <section className="bg-[#f7f9f7] flex flex-col md:flex-row" style={{ minHeight: "calc(100vh - 116px)" }}>
+
+      {/* ── LEFT HALF ── */}
+      <div className="w-full md:w-1/2 flex flex-col justify-between px-8 sm:px-10 lg:px-14 xl:px-16 py-10 md:py-12 relative">
+
+        {/* Decorative circles */}
+        <div className="absolute -top-16 -left-16 w-48 h-48 rounded-full bg-[#22a86a]/6 pointer-events-none" />
+        <div className="absolute bottom-16 -left-8 w-28 h-28 rounded-full bg-[#0d4a2f]/5 pointer-events-none" />
+
+        {/* Top section */}
+        <div className="flex flex-col gap-4 relative z-10">
 
           {/* Badge */}
-          <div className="inline-flex items-center gap-2 border border-[#22a86a]/40 bg-[#f0faf5] text-[#1a6b43] text-xs font-semibold tracking-widest uppercase px-4 py-2 rounded-full w-fit">
-            <span className="w-2 h-2 rounded-full bg-[#22a86a] animate-pulse" />
+          <div className="cs-reveal inline-flex items-center gap-2 border border-[#22a86a]/40 text-[#1a6b3c] text-[10px] font-semibold px-3 py-1.5 rounded-full w-fit tracking-widest uppercase bg-white shadow-sm">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#22a86a] flex-shrink-0" />
             Excellence is our hallmark
           </div>
 
           {/* Heading */}
-          <h1 className="font-serif text-4xl md:text-5xl lg:text-6xl font-black leading-[1.08] text-[#0d2018]">
+          <h1 className="cs-reveal font-serif text-3xl sm:text-4xl lg:text-[42px] xl:text-5xl font-black leading-[1.08] text-[#0d2018] tracking-tight">
             The Future of{" "}
-            <span className="text-[#22a86a]">Digital Learning</span>{" "}
-            &amp; Student Management
+            <em className="not-italic text-[#22a86a]">Digital<br />Learning</em>{" "}
+            &amp; Student<br />Management
           </h1>
 
           {/* Subtext */}
-          <p className="text-[#6b8f7a] text-sm md:text-base leading-relaxed max-w-md font-light">
+          <p className="cs-reveal text-[#6b8f7a] text-sm lg:text-base leading-relaxed max-w-sm font-light">
             Empowering the institution with a modern education management system
             for admissions, online learning, grading, performance tracking, and
             student success.
           </p>
 
           {/* CTA Buttons */}
-          <div className="flex items-center gap-3 md:gap-4 mt-1 md:mt-2 flex-wrap">
+          <div className="cs-reveal flex items-center gap-3 flex-wrap mt-1">
             <Link
               to="/login"
-              className="bg-[#0d4a2f] hover:bg-[#1a6b43] text-white text-sm font-semibold px-6 md:px-7 py-3 md:py-3.5 rounded-full flex items-center gap-2 transition-all duration-200 shadow-md hover:shadow-lg hover:-translate-y-0.5 transform"
+              className="group bg-[#0d4a2f] hover:bg-[#1a6b43] text-white text-xs font-semibold px-5 py-2.5 rounded-full flex items-center gap-2 transition-all duration-200 shadow-md hover:shadow-lg hover:-translate-y-0.5 transform"
             >
-              Log In <span>→</span>
+              Log In
+              <span className="group-hover:translate-x-1 transition-transform duration-200 inline-block">→</span>
             </Link>
             <Link
               to="/admissions"
-              className="border border-gray-300 hover:border-[#22a86a] text-gray-700 hover:text-[#1a6b43] text-sm font-medium px-6 md:px-7 py-3 md:py-3.5 rounded-full transition-all duration-200 hover:bg-[#f0faf5]"
+              className="border-2 border-[#0d4a2f]/20 hover:border-[#22a86a] text-[#0d4a2f] hover:text-[#1a6b43] text-xs font-semibold px-5 py-2.5 rounded-full transition-all duration-200 hover:bg-[#f0faf5] bg-white shadow-sm"
             >
               Admissions
             </Link>
           </div>
-
-          {/* Stats */}
-          <div className="flex items-center gap-0 mt-4 md:mt-6 border-t border-gray-100 pt-5 md:pt-6">
-            <div className="pr-5 mr-5 md:pr-8 md:mr-8 border-r border-gray-200">
-              <p className="text-2xl md:text-3xl font-black text-[#0d2018] font-serif">10K+</p>
-              <p className="text-xs text-[#6b8f7a] mt-1">Students Enrolled</p>
-            </div>
-            <div className="pr-5 mr-5 md:pr-8 md:mr-8 border-r border-gray-200">
-              <p className="text-2xl md:text-3xl font-black text-[#0d2018] font-serif">500+</p>
-              <p className="text-xs text-[#6b8f7a] mt-1">Courses Available</p>
-            </div>
-            <div>
-              <p className="text-2xl md:text-3xl font-black text-[#0d2018] font-serif">98%</p>
-              <p className="text-xs text-[#6b8f7a] mt-1">Satisfaction Rate</p>
-            </div>
-          </div>
         </div>
 
-        {/* ── RIGHT IMAGE ── */}
-        <div className="relative flex items-center justify-center order-first md:order-last">
+
+        
+
+        {/* Stats */}
+        <div className="cs-reveal flex items-stretch gap-0 mt-8 md:mt-0 pt-6 border-t border-[#0d4a2f]/10">
+          {[
+            { num: "100+", label: "Students Enrolled" },
+            { num: "5+", label: "Subjects Available" },
+            { num: "100%",  label: "Satisfaction Rate"  },
+          ].map((s, i) => (
+            <div key={i} className={`flex-1 ${i < 2 ? "border-r border-[#0d4a2f]/10 pr-3 mr-3" : ""}`}>
+              <p className="text-2xl lg:text-3xl font-black text-[#0d2018] font-serif leading-none">{s.num}</p>
+              <p className="text-[11px] text-[#6b8f7a] mt-1 leading-tight">{s.label}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── RIGHT HALF — image with padding so it doesn't touch edges ── */}
+      <div className="w-full md:w-1/2 flex items-center justify-center p-5 md:p-6 lg:p-8">
+        <div className="relative w-full h-full rounded-2xl overflow-hidden shadow-2xl" style={{ minHeight: "260px" }}>
+
+          {/* Image */}
           <img
+            ref={imgRef}
             src="/landing.jpg"
             alt="Education"
-            className="w-full rounded-2xl object-cover shadow-2xl max-h-[280px] sm:max-h-[360px] md:max-h-[480px]"
+            className="absolute inset-0 w-full h-full object-cover scale-[1.04]"
+            style={{ transformOrigin: "center center" }}
           />
-        </div>
 
+
+
+        </div>
       </div>
+
     </section>
   );
 };

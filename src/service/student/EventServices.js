@@ -11,17 +11,28 @@ const StudentEventServices = {
   /**
    * Subscribes to real-time updates for events.
    * @param {function} callback - Receives an array of events
+   * @param {string} studentGrade - The grade of the student to filter valid events
    * @returns {function} Unsubscribe function
    */
-  subscribeToEvents: (callback) => {
+  subscribeToEvents: (callback, studentGrade) => {
     try {
       const eventsQuery = query(collection(db, EVENTS_COLLECTION));
       
       return onSnapshot(eventsQuery, (snapshot) => {
-        const events = snapshot.docs.map(doc => ({
+        let events = snapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data()
         }));
+        
+        // Filter by audience (role/grade)
+        if (studentGrade) {
+          events = events.filter(e => {
+            const audience = e.audience || [];
+            if (audience.length === 0) return true; // Assume visible to all if no audience set
+            return audience.includes("All") || audience.includes(studentGrade);
+          });
+        }
+        
         // Manual sorting to avoid Firestore 400 'requires index' errors
         events.sort((a, b) => {
           if (!a.eventDate) return 1;

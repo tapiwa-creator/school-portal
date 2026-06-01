@@ -1,10 +1,8 @@
-// src/Components/Dashboard/StudentHeader.jsx
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../context/Authcontext";
 import { Bell } from "lucide-react";
+import { useAuth } from "../../context/Authcontext";
 
-// ── Icons ──
 const LogoutIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
@@ -36,82 +34,41 @@ const ChevronDown = () => (
   </svg>
 );
 
-// Derive initials from name
 function getInitials(name) {
   if (!name) return "ST";
-  return name
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
+  return name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase();
 }
 
 export default function StudentHeader() {
-  const { currentUser, userRole, logout } = useAuth();
+  const { logout, userProfile, currentUser } = useAuth();
   const [dropOpen, setDropOpen] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-  const dropRef  = useRef(null);
+  const dropRef = useRef(null);
   const navigate = useNavigate();
 
-  // Get student data from localStorage or context
-  const [studentData, setStudentData] = useState({
-    name: "Student User",
-    id: "STU-00000000",
-    program: "Loading...",
-    year: "Year 1",
-  });
+  // ── Student data (pulling from auth context now) ──
+  const studentData = {
+    name: userProfile?.fullName || userProfile?.name || currentUser?.displayName || "Student User",
+    id: userProfile?.studentId || currentUser?.uid?.slice(0, 8) || "STU-001",
+    program: userProfile?.grade || "Grade 1",
+    year: "Current Academic Year",
+  };
 
-  // Load student data on mount and when user changes
-  useEffect(() => {
-    if (currentUser) {
-      // Try to get from localStorage first
-      const storedUser = localStorage.getItem('user');
-      if (storedUser) {
-        try {
-          const userData = JSON.parse(storedUser);
-          setStudentData({
-            name: userData.name || currentUser.displayName || "Student User",
-            id: userData.studentId || userData.uid || currentUser.uid || "STU-00000000",
-            program: userData.program || "Student",
-            year: userData.year || `Year ${userData.currentYear || 1}`,
-          });
-        } catch (error) {
-          console.error("Error parsing user data:", error);
-        }
-      } else {
-        // Fallback to currentUser data
-        setStudentData({
-          name: currentUser.displayName || "Student User",
-          id: currentUser.uid || "STU-00000000",
-          program: "Student",
-          year: "Year 1",
-        });
-      }
-    }
-  }, [currentUser]);
-
-  // Close dropdown on outside click
   useEffect(() => {
     const handler = (e) => {
-      if (dropRef.current && !dropRef.current.contains(e.target)) {
-        setDropOpen(false);
-      }
+      if (dropRef.current && !dropRef.current.contains(e.target)) setDropOpen(false);
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  const handleLogoutClick = () => {
-    setDropOpen(false);
-    setShowConfirm(true);
-  };
-
-  const handleConfirmedLogout = async () => {
+  const handleLogoutClick = () => { setDropOpen(false); setShowConfirm(true); };
+  
+  const handleConfirmedLogout = async () => { 
     try {
-      setShowConfirm(false);
+      setShowConfirm(false); 
       await logout();
-      navigate("/", { replace: true });
+      navigate("/"); 
     } catch (error) {
       console.error("Logout error:", error);
     }
@@ -119,227 +76,88 @@ export default function StudentHeader() {
 
   return (
     <>
-      <header
-        style={{
-          width: "100%",
-          background: "#ffffff",
-          borderBottom: "1px solid #f0f0f0",
-          padding: "0 32px",
-          height: "64px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "flex-end",
-          gap: "12px",
-          boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
-          fontFamily: "'Geist', 'DM Sans', system-ui, sans-serif",
-          boxSizing: "border-box",
+      <header style={{
+        width: "100%", background: "#ffffff", borderBottom: "1px solid #f0f0f0",
+        padding: "0 32px", height: "64px", display: "flex", alignItems: "center",
+        justifyContent: "flex-end", gap: "12px", boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
+        fontFamily: "'DM Sans', system-ui, sans-serif", boxSizing: "border-box",
+      }}>
+
+        {/* Bell */}
+        <button style={{
+          width: "38px", height: "38px", borderRadius: "50%", border: "none",
+          background: "transparent", display: "flex", alignItems: "center",
+          justifyContent: "center", cursor: "pointer", color: "#888", position: "relative", transition: "background 0.15s",
         }}
-      >
-        {/* ── Notification Bell ── */}
-        <button
-          style={{
-            width: "38px",
-            height: "38px",
-            borderRadius: "50%",
-            border: "none",
-            background: "transparent",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            cursor: "pointer",
-            color: "#888",
-            position: "relative",
-            transition: "background 0.15s",
-          }}
           onMouseEnter={e => e.currentTarget.style.background = "#f5f5f5"}
           onMouseLeave={e => e.currentTarget.style.background = "transparent"}
-          aria-label="Notifications"
-        >
+          aria-label="Notifications">
           <BellIcon />
-          {/* Notification dot */}
-          <span
-            style={{
-              position: "absolute",
-              top: "8px",
-              right: "8px",
-              width: "7px",
-              height: "7px",
-              background: "#f5a623",
-              borderRadius: "50%",
-              border: "1.5px solid #fff",
-            }}
-          />
+          <span style={{ position: "absolute", top: "8px", right: "8px", width: "7px", height: "7px", background: "#f5a623", borderRadius: "50%", border: "1.5px solid #fff" }} />
         </button>
 
-        {/* ── User Avatar + Name + Dropdown ── */}
+        {/* Avatar + Dropdown */}
         <div style={{ position: "relative" }} ref={dropRef}>
-          <button
-            onClick={() => setDropOpen((o) => !o)}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "10px",
-              padding: "6px 10px 6px 6px",
-              borderRadius: "40px",
-              border: "1px solid transparent",
-              background: dropOpen ? "#f5f5f5" : "transparent",
-              cursor: "pointer",
-              transition: "background 0.15s, border-color 0.15s",
-            }}
-            onMouseEnter={e => {
-              if (!dropOpen) e.currentTarget.style.background = "#f9f9f9";
-            }}
-            onMouseLeave={e => {
-              if (!dropOpen) e.currentTarget.style.background = "transparent";
-            }}
-          >
-            {/* Avatar circle */}
-            <div
-              style={{
-                width: "36px",
-                height: "36px",
-                borderRadius: "50%",
-                background: "linear-gradient(135deg, #3a7d44, #52a85e)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "#fff",
-                fontWeight: "700",
-                fontSize: "13px",
-                letterSpacing: "0.03em",
-                flexShrink: 0,
-              }}
-            >
+          <button onClick={() => setDropOpen(o => !o)} style={{
+            display: "flex", alignItems: "center", gap: "10px", padding: "6px 10px 6px 6px",
+            borderRadius: "40px", border: "1px solid transparent",
+            background: dropOpen ? "#f5f5f5" : "transparent", cursor: "pointer", transition: "background 0.15s",
+          }}
+            onMouseEnter={e => { if (!dropOpen) e.currentTarget.style.background = "#f9f9f9"; }}
+            onMouseLeave={e => { if (!dropOpen) e.currentTarget.style.background = "transparent"; }}>
+            <div style={{
+              width: "36px", height: "36px", borderRadius: "50%",
+              background: "linear-gradient(135deg, #1a4d2e, #3a8c5c)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              color: "#fff", fontWeight: "700", fontSize: "13px", flexShrink: 0,
+            }}>
               {getInitials(studentData.name)}
             </div>
-
-            {/* Name + subtitle */}
             <div style={{ textAlign: "left", lineHeight: 1 }}>
-              <p style={{ margin: 0, fontSize: "14px", fontWeight: "600", color: "#1a1a1a" }}>
-                {studentData.name}
-              </p>
-              <p style={{ margin: "3px 0 0", fontSize: "12px", color: "#888", fontWeight: "400" }}>
-                {studentData.program} · {studentData.year}
-              </p>
+              <p style={{ margin: 0, fontSize: "14px", fontWeight: "600", color: "#1a1a1a" }}>{studentData.name}</p>
+              <p style={{ margin: "3px 0 0", fontSize: "12px", color: "#888", fontWeight: "400" }}>{studentData.program}</p>
             </div>
-
-            {/* Chevron */}
-            <span
-              style={{
-                color: "#aaa",
-                display: "flex",
-                transform: dropOpen ? "rotate(180deg)" : "rotate(0deg)",
-                transition: "transform 0.2s ease",
-              }}
-            >
+            <span style={{ color: "#aaa", display: "flex", transform: dropOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s ease" }}>
               <ChevronDown />
             </span>
           </button>
 
-          {/* ── Dropdown ── */}
+          {/* Dropdown */}
           {dropOpen && (
-            <div
-              style={{
-                position: "absolute",
-                right: 0,
-                top: "calc(100% + 8px)",
-                width: "260px",
-                background: "#fff",
-                borderRadius: "14px",
-                border: "1px solid #ebebeb",
-                boxShadow: "0 8px 30px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)",
-                overflow: "hidden",
-                zIndex: 100,
-                animation: "dropIn 0.15s ease",
-              }}
-            >
-              <style>{`
-                @keyframes dropIn {
-                  from { opacity: 0; transform: translateY(-6px); }
-                  to   { opacity: 1; transform: translateY(0); }
-                }
-              `}</style>
+            <div style={{
+              position: "absolute", right: 0, top: "calc(100% + 8px)", width: "260px",
+              background: "#fff", borderRadius: "14px", border: "1px solid #ebebeb",
+              boxShadow: "0 8px 30px rgba(0,0,0,0.12)", overflow: "hidden", zIndex: 100, animation: "dropIn 0.15s ease",
+            }}>
+              <style>{`@keyframes dropIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}`}</style>
 
-              {/* Header block */}
-              <div
-                style={{
-                  padding: "18px 20px",
-                  background: "linear-gradient(135deg, #f4faf5, #eaf5ec)",
-                  borderBottom: "1px solid #e8f0e9",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "12px",
-                }}
-              >
-                <div
-                  style={{
-                    width: "44px",
-                    height: "44px",
-                    borderRadius: "50%",
-                    background: "linear-gradient(135deg, #3a7d44, #52a85e)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    color: "#fff",
-                    fontWeight: "700",
-                    fontSize: "15px",
-                    flexShrink: 0,
-                  }}
-                >
+              {/* Header */}
+              <div style={{ padding: "18px 20px", background: "linear-gradient(135deg,#f4faf5,#eaf5ec)", borderBottom: "1px solid #e8f0e9", display: "flex", alignItems: "center", gap: "12px" }}>
+                <div style={{ width: "44px", height: "44px", borderRadius: "50%", background: "linear-gradient(135deg,#1a4d2e,#3a8c5c)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: "700", fontSize: "15px", flexShrink: 0 }}>
                   {getInitials(studentData.name)}
                 </div>
                 <div>
-                  <p style={{ margin: 0, fontWeight: "700", color: "#1a1a1a", fontSize: "15px" }}>
-                    {studentData.name}
-                  </p>
-                  <p style={{ margin: "3px 0 0", fontSize: "12px", color: "#5a9a68", fontWeight: "500" }}>
-                    {studentData.program} · {studentData.year}
-                  </p>
+                  <p style={{ margin: 0, fontWeight: "700", color: "#1a1a1a", fontSize: "15px" }}>{studentData.name}</p>
+                  <p style={{ margin: "3px 0 0", fontSize: "12px", color: "#5a9a68", fontWeight: "500" }}>{studentData.program} · {studentData.year}</p>
                 </div>
               </div>
 
-              {/* Student ID row */}
-              <div
-                style={{
-                  padding: "14px 20px",
-                  borderBottom: "1px solid #f5f5f5",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "12px",
-                }}
-              >
-                <span style={{ color: "#999", display: "flex" }}>
-                  <IdIcon />
-                </span>
+              {/* Student ID */}
+              <div style={{ padding: "14px 20px", borderBottom: "1px solid #f5f5f5", display: "flex", alignItems: "center", gap: "12px" }}>
+                <span style={{ color: "#999", display: "flex" }}><IdIcon /></span>
                 <div>
-                  <p style={{ margin: 0, fontSize: "11px", color: "#aaa", textTransform: "uppercase", letterSpacing: "0.06em" }}>
-                    Student ID
-                  </p>
-                  <p style={{ margin: "4px 0 0", fontSize: "13px", fontWeight: "600", color: "#333", fontFamily: "monospace" }}>
-                    {studentData.id}
-                  </p>
+                  <p style={{ margin: 0, fontSize: "11px", color: "#aaa", textTransform: "uppercase", letterSpacing: "0.06em" }}>Student ID</p>
+                  <p style={{ margin: "4px 0 0", fontSize: "13px", fontWeight: "600", color: "#333", fontFamily: "monospace" }}>{studentData.id}</p>
                 </div>
               </div>
 
-              {/* Logout - now opens modal */}
-              <button
-                onClick={handleLogoutClick}
-                style={{
-                  width: "100%",
-                  padding: "14px 20px",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "12px",
-                  background: "none",
-                  border: "none",
-                  cursor: "pointer",
-                  textAlign: "left",
-                  transition: "background 0.15s",
-                  color: "#e05252",
-                }}
+              {/* Logout */}
+              <button onClick={handleLogoutClick} style={{
+                width: "100%", padding: "14px 20px", display: "flex", alignItems: "center", gap: "12px",
+                background: "none", border: "none", cursor: "pointer", textAlign: "left", transition: "background 0.15s", color: "#e05252",
+              }}
                 onMouseEnter={e => e.currentTarget.style.background = "#fff5f5"}
-                onMouseLeave={e => e.currentTarget.style.background = "none"}
-              >
+                onMouseLeave={e => e.currentTarget.style.background = "none"}>
                 <LogoutIcon />
                 <span style={{ fontSize: "14px", fontWeight: "500" }}>Log Out</span>
               </button>
@@ -348,55 +166,31 @@ export default function StudentHeader() {
         </div>
       </header>
 
-      {/* Logout Confirmation Modal */}
+      {/* Logout Modal */}
       {showConfirm && (
-        <div
-          onClick={() => setShowConfirm(false)}
-          className="fixed inset-0 z-[99999] flex items-center justify-center"
-          style={{ background: "rgba(0,0,0,0.45)", backdropFilter: "blur(4px)" }}
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className="bg-white rounded-2xl text-center w-[360px] max-w-[90%]"
-            style={{
-              padding: "36px 32px 28px",
-              boxShadow: "0 24px 64px rgba(0,0,0,0.18)",
-              animation: "modalIn 0.18s ease",
-            }}
-          >
-            {/* Icon */}
-            <div
-              className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-5"
-              style={{ background: "#fff5f5", border: "2px solid #fecaca" }}
-            >
+        <div onClick={() => setShowConfirm(false)} className="fixed inset-0 z-[99999] flex items-center justify-center"
+          style={{ background: "rgba(0,0,0,0.45)", backdropFilter: "blur(4px)" }}>
+          <div onClick={e => e.stopPropagation()} className="bg-white rounded-2xl text-center w-[360px] max-w-[90%]"
+            style={{ padding: "36px 32px 28px", boxShadow: "0 24px 64px rgba(0,0,0,0.18)", animation: "modalIn 0.18s ease" }}>
+            <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-5"
+              style={{ background: "#fff5f5", border: "2px solid #fecaca" }}>
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
                 <polyline points="16 17 21 12 16 7"/>
                 <line x1="21" y1="12" x2="9" y2="12"/>
               </svg>
             </div>
-
             <h2 className="text-xl font-bold text-gray-900 mb-2">Log Out?</h2>
             <p className="text-sm text-gray-400 mb-8 leading-relaxed">
               Are you sure you want to log out of the Student Portal? Any unsaved changes will be lost.
             </p>
-
             <div className="flex gap-3">
-              <button
-                onClick={() => setShowConfirm(false)}
+              <button onClick={() => setShowConfirm(false)}
                 className="flex-1 py-3 rounded-xl text-sm font-semibold border border-gray-200 bg-white hover:bg-green-50 transition-colors"
-                style={{ color: "#1a4d2e" }}
-              >
-                Stay
-              </button>
-              <button
-                onClick={handleConfirmedLogout}
+                style={{ color: "#1a4d2e" }}>Stay</button>
+              <button onClick={handleConfirmedLogout}
                 className="flex-1 py-3 rounded-xl text-sm font-semibold text-white hover:opacity-80 transition-opacity"
-                style={{
-                  background: "linear-gradient(135deg,#b91c1c,#ef4444)",
-                  boxShadow: "0 4px 14px rgba(239,68,68,0.3)",
-                }}
-              >
+                style={{ background: "linear-gradient(135deg,#b91c1c,#ef4444)", boxShadow: "0 4px 14px rgba(239,68,68,0.3)" }}>
                 Yes, Log Out
               </button>
             </div>
@@ -404,12 +198,7 @@ export default function StudentHeader() {
         </div>
       )}
 
-      <style>{`
-        @keyframes modalIn {
-          from { opacity: 0; transform: scale(0.95) translateY(6px); }
-          to   { opacity: 1; transform: scale(1) translateY(0); }
-        }
-      `}</style>
+      <style>{`@keyframes modalIn{from{opacity:0;transform:scale(0.95) translateY(6px)}to{opacity:1;transform:scale(1) translateY(0)}}`}</style>
     </>
   );
 }

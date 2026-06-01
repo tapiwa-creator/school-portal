@@ -25,7 +25,7 @@ const NAV_MAIN = [
   { label: "Dashboard", path: "/student", Icon: DashIcon },
   { label: "My Results", path: "/student/results", Icon: ResultsIcon },
   { label: "Timetable", path: "/student/timetable", Icon: TimetableIcon },
-  { label: "Assignments", path: "/student/assignments", Icon: AssignIcon, badge: 3 },
+  { label: "Assignments", path: "/student/assignments", Icon: AssignIcon },
   { label: "Events", path: "/student/events", Icon: EventsIcon },
   { label: "Fee Payments", path: "/student/fees", Icon: FeeIcon },
   // Compliance module removed

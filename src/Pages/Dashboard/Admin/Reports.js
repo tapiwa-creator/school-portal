@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import AdminStudentService from "../../../service/admin/StudentManagementService";
+import { useAuth } from "../../../context/Authcontext";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 
@@ -384,6 +385,7 @@ function ReportCard({ report, isAdmin, onView, onPublish, onDelete, onDownloadPD
 
 // ── Main Component ────────────────────────────────────────────────────────────
 export default function Reports() {
+  const { userProfile } = useAuth();
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [reports, setReports] = useState([]);
@@ -404,9 +406,9 @@ export default function Reports() {
       setStudents(data);
       generateReportsFromStudents(data);
       setLoading(false);
-    });
+    }, userProfile?.assignedGrade);
     return () => unsub();
-  }, []);
+  }, [userProfile?.assignedGrade]);
 
   // Generate reports from student academic records
   const generateReportsFromStudents = (studentsData) => {

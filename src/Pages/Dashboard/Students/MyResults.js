@@ -123,10 +123,38 @@ export default function MyResults() {
   // ── Loading ───────────────────────────────────────────────────────────
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#f0f4f0] flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-12 h-12 rounded-full border-4 border-green-200 border-t-green-600 animate-spin mx-auto mb-4" />
-          <p className="text-gray-500 text-sm font-medium">Loading your results…</p>
+      <div className="p-3 md:p-6 space-y-4 md:space-y-6 pt-16 md:pt-6">
+        {/* ── Hero Skeleton ── */}
+        <div className="rounded-2xl h-[120px] bg-gray-200 animate-pulse w-full"></div>
+
+        {/* ── Tabs Skeleton ── */}
+        <div className="flex gap-2 mb-2">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="h-9 w-20 bg-gray-200 rounded-lg animate-pulse"></div>
+          ))}
+        </div>
+
+        {/* ── Summary Cards Skeleton ── */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-5">
+          {[1, 2, 3, 4].map(i => (
+            <div key={i} className="bg-white rounded-2xl p-4 md:p-5 shadow-sm border border-gray-100 animate-pulse">
+              <div className="h-10 w-10 bg-gray-200 rounded-xl mb-4"></div>
+              <div className="h-8 w-16 bg-gray-200 rounded mb-2"></div>
+              <div className="h-4 w-24 bg-gray-100 rounded mb-4"></div>
+              <div className="h-2 w-full bg-gray-200 rounded-full"></div>
+            </div>
+          ))}
+        </div>
+
+        {/* ── Results Table Skeleton ── */}
+        <div className="bg-white rounded-2xl p-4 md:p-5 shadow-sm border border-gray-100 animate-pulse">
+          <div className="h-6 w-48 bg-gray-200 rounded mb-6"></div>
+          <div className="space-y-4">
+            <div className="h-4 w-full bg-gray-100 rounded"></div>
+            <div className="h-10 w-full bg-gray-50 rounded"></div>
+            <div className="h-10 w-full bg-gray-50 rounded"></div>
+            <div className="h-10 w-full bg-gray-50 rounded"></div>
+          </div>
         </div>
       </div>
     );
@@ -137,7 +165,7 @@ export default function MyResults() {
     return (
       <div className="min-h-screen bg-[#f0f4f0] flex items-center justify-center p-6">
         <div className="bg-white rounded-2xl p-8 max-w-sm w-full text-center shadow-sm border border-gray-100">
-          <div className="text-4xl mb-4"><AlertTriangle className="w-5 h-5 inline-block" /></div>
+          <div className="text-4xl mb-4"><AlertTriangle className="w-5 h-5 inline-block text-yellow-500" /></div>
           <h2 className="text-lg font-bold text-gray-900 mb-2">Account Not Linked</h2>
           <p className="text-sm text-gray-500 leading-relaxed">
             Your login hasn't been linked to a student record yet. Please contact your school administrator.
@@ -208,7 +236,7 @@ export default function MyResults() {
       {/* ── Results not published ── */}
       {!published && (
         <div className="bg-white rounded-2xl p-10 text-center shadow-sm border border-gray-100">
-          <div className="text-4xl mb-4"><Lock className="w-5 h-5 inline-block" /></div>
+          <div className="text-4xl mb-4"><Lock className="w-5 h-5 inline-block text-gray-400" /></div>
           <h3 className="text-lg font-bold text-gray-800 mb-2">{term} Results Not Yet Available</h3>
           <p className="text-sm text-gray-400 max-w-xs mx-auto leading-relaxed">
             Your {term} results haven't been published yet. Check back later or contact your teacher.
@@ -224,7 +252,7 @@ export default function MyResults() {
             {/* Academic Average */}
             <div className="bg-white rounded-2xl p-4 md:p-5 shadow-sm border border-gray-100">
               <div className="flex items-start justify-between mb-3 md:mb-4">
-                <div className="w-9 h-9 md:w-10 md:h-10 bg-blue-50 rounded-xl flex items-center justify-center text-base md:text-lg"><BarChart className="w-5 h-5 inline-block" /></div>
+                <div className="w-9 h-9 md:w-10 md:h-10 bg-blue-50 rounded-xl flex items-center justify-center text-base md:text-lg"><BarChart className="w-5 h-5 inline-block text-blue-600" /></div>
                 <span className="text-xs font-semibold text-green-500 bg-green-50 px-2 py-1 rounded-full">{calcLetter(overallAvg)}</span>
               </div>
               <div className="text-3xl md:text-4xl font-bold text-gray-900 mb-1">{overallAvg}%</div>
@@ -238,7 +266,7 @@ export default function MyResults() {
             {/* Best Subject */}
             <div className="bg-white rounded-2xl p-4 md:p-5 shadow-sm border border-gray-100">
               <div className="flex items-start justify-between mb-3 md:mb-4">
-                <div className="w-9 h-9 md:w-10 md:h-10 bg-yellow-50 rounded-xl flex items-center justify-center text-base md:text-lg"><Trophy className="w-5 h-5 inline-block" /></div>
+                <div className="w-9 h-9 md:w-10 md:h-10 bg-yellow-50 rounded-xl flex items-center justify-center text-base md:text-lg"><Trophy className="w-5 h-5 inline-block text-yellow-600" /></div>
                 <span className="text-xs font-semibold text-yellow-600 bg-yellow-50 px-2 py-1 rounded-full">Best</span>
               </div>
               <div className="text-3xl md:text-4xl font-bold text-gray-900 mb-1">{best?.avg ?? 0}%</div>
@@ -252,7 +280,7 @@ export default function MyResults() {
             {/* Needs Attention */}
             <div className="bg-white rounded-2xl p-4 md:p-5 shadow-sm border border-gray-100">
               <div className="flex items-start justify-between mb-3 md:mb-4">
-                <div className="w-9 h-9 md:w-10 md:h-10 bg-red-50 rounded-xl flex items-center justify-center text-base md:text-lg"><AlertTriangle className="w-5 h-5 inline-block" /></div>
+                <div className="w-9 h-9 md:w-10 md:h-10 bg-red-50 rounded-xl flex items-center justify-center text-base md:text-lg"><AlertTriangle className="w-5 h-5 inline-block text-red-500" /></div>
                 <span className="text-xs font-semibold text-red-500 bg-red-50 px-2 py-1 rounded-full hidden md:inline">Needs Attention</span>
                 <span className="text-xs font-semibold text-red-500 bg-red-50 px-2 py-1 rounded-full md:hidden">Weak</span>
               </div>
@@ -267,7 +295,7 @@ export default function MyResults() {
             {/* Assessments */}
             <div className="bg-white rounded-2xl p-4 md:p-5 shadow-sm border border-gray-100">
               <div className="flex items-start justify-between mb-3 md:mb-4">
-                <div className="w-9 h-9 md:w-10 md:h-10 bg-purple-50 rounded-xl flex items-center justify-center text-base md:text-lg"><FileText className="w-5 h-5 inline-block" /></div>
+                <div className="w-9 h-9 md:w-10 md:h-10 bg-purple-50 rounded-xl flex items-center justify-center text-base md:text-lg"><FileText className="w-5 h-5 inline-block text-purple-600" /></div>
                 <span className="text-xs font-semibold text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
                   {atRiskCount === 0 ? "On Track" : `${atRiskCount} At Risk`}
                 </span>
@@ -286,7 +314,7 @@ export default function MyResults() {
           <div className="bg-white rounded-2xl p-4 md:p-5 shadow-sm border border-gray-100">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                <span className="text-lg"><ClipboardList className="w-5 h-5 inline-block" /></span>
+                <span className="text-lg"><ClipboardList className="w-5 h-5 inline-block text-gray-600" /></span>
                 <span className="font-semibold text-gray-800">Detailed Results – {term}</span>
               </div>
               <button
@@ -368,7 +396,7 @@ export default function MyResults() {
 
             <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
               <div className="flex items-center gap-2 mb-5">
-                <span className="text-lg"><TrendingUp className="w-5 h-5 inline-block" /></span>
+                <span className="text-lg"><TrendingUp className="w-5 h-5 inline-block text-gray-600" /></span>
                 <span className="font-semibold text-gray-800">Subject Performance Breakdown</span>
               </div>
               {sortedRecs.map((r) => (
@@ -384,7 +412,7 @@ export default function MyResults() {
 
             <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
               <div className="flex items-center gap-2 mb-5">
-                <span className="text-lg"><GraduationCap className="w-5 h-5 inline-block" /></span>
+                <span className="text-lg"><GraduationCap className="w-5 h-5 inline-block text-gray-600" /></span>
                 <span className="font-semibold text-gray-800">GPA & Standing</span>
               </div>
               <div className="flex justify-center mb-6">

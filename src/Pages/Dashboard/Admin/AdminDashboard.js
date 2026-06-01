@@ -22,34 +22,6 @@ const gradeColor = (avg) =>
       avg >= 50 ? "bg-orange-100 text-orange-500" : "bg-red-100 text-red-500";
 
 // ── Time greeting ──────────────────────────────────────────────────────────
-const getGreeting = () => {
-  const h = new Date().getHours();
-  if (h < 12) return "Good morning";
-  if (h < 17) return "Good afternoon";
-  return "Good evening";
-};
-
-/**
- * Build the admin display name with title prefix.
- * Title comes from: currentUser.title | currentUser.prefix | currentUser.displayTitle
- * Name comes from: currentUser.displayName | currentUser.fullName | email prefix
- */
-function buildAdminName(currentUser) {
-  const raw =
-    currentUser?.displayName ||
-    currentUser?.fullName ||
-    currentUser?.email?.split("@")[0] ||
-    "Admin";
-
-  const title =
-    currentUser?.title ||
-    currentUser?.prefix ||
-    currentUser?.displayTitle ||
-    "";
-
-  const firstName = raw.split(" ")[0];
-  return title ? `${title} ${firstName}` : firstName;
-}
 
 // ── Today's day name ───────────────────────────────────────────────────────
 const TODAY_NAME = (() => {
@@ -92,7 +64,7 @@ const ProgressBar = ({ value, max = 100, color = "bg-green-500", height = "h-2" 
 // ── Component ──────────────────────────────────────────────────────────────
 export default function AdminDashboard() {
   const navigate = useNavigate();
-  const { currentUser } = useAuth();
+  const { currentUser, userProfile } = useAuth();
 
   // ── state ──
   const [students, setStudents] = useState([]);
@@ -105,9 +77,9 @@ export default function AdminDashboard() {
   useEffect(() => {
     const unsub = AdminStudentService.subscribeToStudents((data) => {
       setStudents(data);
-    });
+    }, userProfile?.assignedGrade);
     return () => unsub();
-  }, []);
+  }, [userProfile?.assignedGrade]);
 
   // ── 2. Assignments ─────────────────────────────────────────────────────
   useEffect(() => {
@@ -221,9 +193,6 @@ export default function AdminDashboard() {
     .sort((a, b) => new Date(a.eventDate) - new Date(b.eventDate))
     .slice(0, 4);
 
-  // ── Greeting ──────────────────────────────────────────────────────────
-  const adminName = buildAdminName(currentUser);
-
   return (
     <div className="min-h-screen bg-[#f0f4f0] p-3 md:p-6 space-y-4 md:space-y-6 font-sans pt-16 md:pt-6">
 
@@ -232,7 +201,7 @@ export default function AdminDashboard() {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between px-5 md:px-8 py-5 md:py-7 gap-4">
           <div>
             <h1 className="text-white text-2xl md:text-3xl font-bold mb-1">
-              {getGreeting()}, {adminName}
+              Welcome, {userProfile?.fullName?.split(" ")[0] || currentUser?.displayName?.split(" ")[0] || "Admin"}
             </h1>
             <p className="text-green-300 text-xs md:text-sm">
               Term 1 · {new Date().getFullYear()} &nbsp;|&nbsp; Corner Stone Primary School

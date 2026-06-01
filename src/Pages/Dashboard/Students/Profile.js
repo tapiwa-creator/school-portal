@@ -5,7 +5,7 @@ import { auth, db } from "../../../Firebase/Firebase";
 import { useAuth } from "../../../context/Authcontext";
 import { AlertTriangle, GraduationCap, Calendar, Lock, CheckCircle, Library, MessageSquare, Info, Shield, Briefcase, Clock } from "lucide-react";
 
-const TABS = ["Personal Details", "Staff Information", "Change Password"];
+const TABS = ["Personal Details", "Student Information", "Change Password"];
 
 // ── Info row ───────────────────────────────────────────────────────────────
 function InfoRow({ label, value, highlight = false }) {
@@ -111,7 +111,7 @@ function Skeleton({ className }) {
 }
 
 // ── Main component ─────────────────────────────────────────────────────────
-export default function AdminProfile() {
+export default function StudentProfile() {
   const { currentUser } = useAuth();
   const [profile, setProfile] = useState(null);
   const [loadingProfile, setLoading] = useState(true);
@@ -145,17 +145,16 @@ export default function AdminProfile() {
         } else {
           // Fallback: build minimal profile from Firebase Auth user
           setProfile({
-            fullName: currentUser.displayName || "Administrator",
+            fullName: currentUser.displayName || "Student User",
             email: currentUser.email || "",
-            role: "admin",
-            staffId: currentUser.uid?.slice(0, 8) || "ADMIN001",
-            department: "Administration",
-            position: "School Administrator",
+            role: "student",
+            studentId: currentUser.uid?.slice(0, 8) || "STU-001",
+            grade: "Grade 1",
             status: "Active",
           });
         }
       } catch (err) {
-        console.error("Error loading admin profile:", err);
+        console.error("Error loading student profile:", err);
       } finally {
         setLoading(false);
       }
@@ -198,10 +197,10 @@ export default function AdminProfile() {
   };
 
   // ── Derive display values from profile ───────────────────────────────
-  const name = profile?.fullName || profile?.name || "Administrator";
-  const initials = name !== "Administrator"
+  const name = profile?.fullName || profile?.name || currentUser?.displayName || "Student User";
+  const initials = name !== "Student User"
     ? name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()
-    : "AD";
+    : "ST";
 
   // ── Loading skeleton ─────────────────────────────────────────────────
   if (loadingProfile) {
@@ -236,16 +235,14 @@ export default function AdminProfile() {
             <div>
               <h1 className="text-white text-2xl md:text-3xl font-bold mb-1">{name}</h1>
               <p className="text-green-300 text-xs md:text-sm">
-                {profile?.staffId || currentUser?.uid?.slice(0, 10) || "ADMIN-001"}
-                {profile?.department ? ` | ${profile.department}` : ""}
-                {profile?.position ? ` · ${profile.position}` : ""}
+                {profile?.studentId || currentUser?.uid?.slice(0, 10) || "STU-001"}
+                {profile?.grade ? ` | ${profile.grade}` : ""}
               </p>
             </div>
           </div>
           <div className="flex gap-3 md:gap-4">
             {[
-              { value: profile?.position || "Administrator", label: "Position" },
-              { value: profile?.department || "Administration", label: "Department" },
+              { value: profile?.grade || "Grade 1", label: "Grade" },
               { value: profile?.status || "Active", label: "Status" },
             ].map(({ value, label }) => (
               <div key={label} className="bg-white/10 backdrop-blur-sm border border-white/15 rounded-xl px-3 md:px-6 py-2 md:py-3 text-center flex-1 md:flex-none md:min-w-[90px]">
@@ -286,101 +283,53 @@ export default function AdminProfile() {
             <InfoRow label="Emergency Contact" value={profile?.emergencyContact || "—"} />
           </InfoCard>
 
-          <InfoCard title="Employment Details" icon={<Briefcase className="w-5 h-5" />}>
-            <InfoRow label="Staff ID" value={profile?.staffId || "ADMIN-001"} highlight />
-            <InfoRow label="Position" value={profile?.position || "School Administrator"} />
-            <InfoRow label="Department" value={profile?.department || "Administration"} />
-            <InfoRow label="Hire Date" value={profile?.hireDate || "—"} />
-            <InfoRow label="Employment Type" value={profile?.employmentType || "Full-time"} />
+          <InfoCard title="Enrollment Details" icon={<Briefcase className="w-5 h-5" />}>
+            <InfoRow label="Student ID" value={profile?.studentId || "STU-001"} highlight />
+            <InfoRow label="Grade" value={profile?.grade || "Grade 1"} />
+            <InfoRow label="Enrollment Date" value={profile?.enrolled || "—"} />
           </InfoCard>
 
           <InfoCard title="Account & Access" icon={<Lock className="w-5 h-5" />}>
-            <InfoRow label="Account Type" value={profile?.role === "super_admin" ? "Super Administrator" : "Administrator"} highlight />
-            <InfoRow label="Access Level" value={profile?.accessLevel || "Full Access"} highlight />
+            <InfoRow label="Account Type" value="Student Portal" highlight />
             <InfoRow label="Last Login" value={profile?.lastLogin || new Date().toLocaleDateString()} />
             <InfoRow label="Status" value={profile?.status || "Active"} highlight />
             <div className="mt-4 bg-blue-50 rounded-xl p-3">
               <p className="text-xs text-blue-600 leading-relaxed">
-                <Info className="w-5 h-5 inline-block mr-1" /> Admin accounts have full access to school management features.
+                <Info className="w-5 h-5 inline-block mr-1" /> Student accounts have access to results, assignments and timetable.
               </p>
             </div>
           </InfoCard>
         </div>
       )}
 
-      {/* ── Tab 1: Staff Information ── */}
+      {/* ── Tab 1: Student Information ── */}
       {activeTab === 1 && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
-          <InfoCard title="Staff Details" icon={<GraduationCap className="w-5 h-5" />}>
-            <InfoRow label="Staff ID" value={profile?.staffId || currentUser?.uid?.slice(0, 8)} highlight />
-            <InfoRow label="Role" value={profile?.role === "super_admin" ? "Super Administrator" : "Administrator"} />
-            <InfoRow label="Department" value={profile?.department || "Administration"} />
-            <InfoRow label="Supervisor" value={profile?.supervisor || "Head of School"} />
-            <InfoRow label="Qualifications" value={profile?.qualifications || "—"} />
+          <InfoCard title="Academic Details" icon={<GraduationCap className="w-5 h-5" />}>
+            <InfoRow label="Student ID" value={profile?.studentId || currentUser?.uid?.slice(0, 8)} highlight />
+            <InfoRow label="Role" value="Student" />
+            <InfoRow label="Grade" value={profile?.grade || "Grade 1"} />
           </InfoCard>
 
           <InfoCard title="School Information" icon={<Briefcase className="w-5 h-5" />}>
             <InfoRow label="School" value="Corner Stone Primary School" />
             <InfoRow label="Campus" value={profile?.campus || "Main Campus"} />
-            <InfoRow label="Office" value={profile?.office || "Administration Building"} />
-            <InfoRow label="Work Email" value={profile?.email} />
-
             <div className="mt-4 flex items-center gap-3 bg-green-50 border border-green-100 rounded-xl p-4">
               <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center text-lg flex-shrink-0">
                 <CheckCircle className="w-5 h-5 text-green-600" />
               </div>
               <div>
                 <p className="text-sm font-semibold text-green-800">
-                  {profile?.status === "Active" ? "Active Staff Member" : "Staff Account Pending"}
+                  {profile?.status === "Active" ? "Active Student" : "Account Pending"}
                 </p>
                 <p className="text-xs text-green-600 mt-0.5">
                   {profile?.status === "Active"
-                    ? `You have full administrative access to the school system.`
+                    ? `You are currently enrolled and active.`
                     : "Your account is being processed for approval."}
                 </p>
               </div>
             </div>
           </InfoCard>
-
-          {/* Admin statistics cards */}
-          <div className="col-span-1 md:col-span-2 grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-            {[
-              { icon: <UsersIcon className="w-5 h-5" />, label: "Total Students", value: "245", color: "bg-blue-50", text: "text-blue-600" },
-              { icon: <ShieldIcon className="w-5 h-5" />, label: "Total Staff", value: "32", color: "bg-green-50", text: "text-green-700" },
-              { icon: <GraduationCap className="w-5 h-5" />, label: "Active Classes", value: "12", color: "bg-purple-50", text: "text-purple-700" },
-              { icon: <Clock className="w-5 h-5" />, label: "Assignments", value: "18", color: "bg-yellow-50", text: "text-yellow-700" },
-            ].map(({ icon, label, value, color, text }) => (
-              <div key={label} className={`${color} rounded-2xl p-5 border border-white`}>
-                <div className="text-2xl mb-2">{icon}</div>
-                <div className={`text-xl font-bold ${text} mb-1`}>{value}</div>
-                <div className="text-xs text-gray-500">{label}</div>
-              </div>
-            ))}
-          </div>
-
-          {/* Administrative Permissions */}
-          <div className="col-span-1 md:col-span-2">
-            <InfoCard title="Administrative Permissions" icon={<Shield className="w-5 h-5" />}>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                {[
-                  "Student Management",
-                  "Staff Management",
-                  "Timetable Management",
-                  "Assignment Management",
-                  "Event Management",
-                  "Reports & Analytics",
-                  "System Settings",
-                  "User Permissions",
-                  "Data Export"
-                ].map(permission => (
-                  <div key={permission} className="flex items-center gap-2 text-sm text-gray-600">
-                    <span className="text-green-500">✓</span>
-                    <span>{permission}</span>
-                  </div>
-                ))}
-              </div>
-            </InfoCard>
-          </div>
         </div>
       )}
 
@@ -454,8 +403,8 @@ export default function AdminProfile() {
                 <span className="font-semibold text-orange-700">Security Notice</span>
               </div>
               <p className="text-sm text-orange-600 leading-relaxed">
-                As an administrator, your account has elevated privileges. Never share your password
-                with anyone, including IT staff. Corner Stone will never ask for your password.
+                As a student, your account has limited privileges. Never share your password
+                with anyone. Corner Stone will never ask for your password.
               </p>
             </div>
 

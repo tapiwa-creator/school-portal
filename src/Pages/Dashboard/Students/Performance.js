@@ -212,10 +212,41 @@ export default function Performance() {
   // ── Loading ────────────────────────────────────────────────────────────
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#f0f4f0] flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-12 h-12 rounded-full border-4 border-green-200 border-t-green-600 animate-spin mx-auto mb-4" />
-          <p className="text-gray-500 text-sm font-medium">Loading your performance…</p>
+      <div className="p-3 md:p-6 space-y-4 md:space-y-5 pt-16 md:pt-6">
+        {/* ── Hero Skeleton ── */}
+        <div className="rounded-2xl h-[120px] bg-gray-200 animate-pulse w-full"></div>
+
+        {/* ── Tabs Skeleton ── */}
+        <div className="flex gap-2 mb-2">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="h-9 w-20 bg-gray-200 rounded-lg animate-pulse"></div>
+          ))}
+        </div>
+
+        {/* ── Summary Cards Skeleton ── */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-5">
+          {[1, 2, 3, 4].map(i => (
+            <div key={i} className="bg-white rounded-2xl p-4 md:p-5 shadow-sm border border-gray-100 animate-pulse">
+              <div className="h-10 w-10 bg-gray-200 rounded-xl mb-4"></div>
+              <div className="h-8 w-16 bg-gray-200 rounded mb-2"></div>
+              <div className="h-4 w-24 bg-gray-100 rounded mb-4"></div>
+              <div className="h-2 w-full bg-gray-200 rounded-full"></div>
+            </div>
+          ))}
+        </div>
+
+        {/* ── Table Skeleton ── */}
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden animate-pulse">
+          <div className="h-14 bg-gray-50 border-b border-gray-100"></div>
+          <div className="space-y-1">
+            {[1, 2, 3].map(i => <div key={i} className="h-16 bg-gray-50"></div>)}
+          </div>
+        </div>
+
+        {/* ── Bottom Section Skeleton ── */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 animate-pulse h-64"></div>
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 animate-pulse h-64"></div>
         </div>
       </div>
     );

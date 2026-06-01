@@ -1,13 +1,12 @@
-
-
 // src/Pages/CreateAccount.js
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { auth, db } from "../Firebase/Firebase";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { doc, setDoc, Timestamp, collection, query, where, getDocs } from "firebase/firestore";
-import { AlertTriangle, GraduationCap } from "lucide-react";
+import { AlertTriangle, GraduationCap, ShieldCheck } from "lucide-react";
 
+const GRADES = ["ECD A", "ECD B", "Grade 1", "Grade 2", "Grade 3", "Grade 4", "Grade 5", "Grade 6", "Grade 7"];
 
 const CreateAccount = () => {
   const navigate = useNavigate();
@@ -22,8 +21,9 @@ const CreateAccount = () => {
     fullName: "",
     email: "",
     phone: "",
-    grade: "Grade 1",       // for students
-    studentId: "",          // for students
+    grade: "Grade 1",         // for students — which grade they are enrolled in
+    studentId: "",             // for students
+    assignedGrade: "ECD A",   // for admins — which grade they are responsible for
     password: "",
     confirmPassword: "",
   });
@@ -39,6 +39,7 @@ const CreateAccount = () => {
     if (!form.fullName.trim()) { setError("Full name is required."); return; }
     if (!form.email.trim()) { setError("Email is required."); return; }
     if (!form.email.includes("@")) { setError("Please enter a valid email."); return; }
+    if (isAdmin && !form.assignedGrade) { setError("Please select an assigned grade."); return; }
     setError("");
     setStep(2);
   };
@@ -60,32 +61,43 @@ const CreateAccount = () => {
       // 2. Update display name
       await updateProfile(user, { displayName: form.fullName });
 
-      // 2.5 Generate unique student ID if student and not provided
-      let finalStudentId = form.studentId ? form.studentId.trim() : "";
-      if (role === "student" && !finalStudentId) {
+      // 2.5 Generate unique ID
+      let generatedId = "";
+      
+      if (!generatedId) {
+        const yearSuffix = new Date().getFullYear().toString().slice(-2); // e.g., "25", "26"
         let isUnique = false;
         while (!isUnique) {
-          finalStudentId = "C" + Math.floor(100000 + Math.random() * 900000).toString();
-          const q = query(collection(db, "users"), where("studentId", "==", finalStudentId));
-          const snap = await getDocs(q);
-          if (snap.empty) {
+          // C + YY + 3 random digits (10000 to 99999)
+          generatedId = `C${yearSuffix}` + Math.floor(10000 + Math.random() * 90000).toString();
+          
+          const qStudent = query(collection(db, "users"), where("studentId", "==", generatedId));
+          const snapStudent = await getDocs(qStudent);
+          
+          const qAdmin = query(collection(db, "users"), where("adminId", "==", generatedId));
+          const snapAdmin = await getDocs(qAdmin);
+
+          if (snapStudent.empty && snapAdmin.empty) {
             isUnique = true;
           }
         }
       }
 
-      // 3. Save profile to Firestore
+      // 3. Build profile data
       const profileData = {
         uid: user.uid,
         fullName: form.fullName,
         email: form.email,
         phone: form.phone || "",
         role,
+        // assignedGrade is saved for admins so they can only see their grade's students
+        assignedGrade: isAdmin ? form.assignedGrade : null,
+        ...(isAdmin && { adminId: generatedId }),
         createdAt: Timestamp.now(),
         updatedAt: Timestamp.now(),
         ...(role === "student" && {
           grade: form.grade,
-          studentId: finalStudentId,
+          studentId: generatedId,
           status: "Pending",
           academic: [],
           attendance: { present: 0, absent: 0, late: 0, total: 0 },
@@ -94,10 +106,10 @@ const CreateAccount = () => {
         }),
       };
 
-      // Save to 'users' collection (all users)
+      // 4. Save to 'users' collection (all users)
       await setDoc(doc(db, "users", user.uid), profileData);
 
-      // Also save to 'students' collection if student role
+      // 5. Also save to 'students' collection if student role
       if (role === "student") {
         await setDoc(doc(db, "students", user.uid), {
           ...profileData,
@@ -107,7 +119,7 @@ const CreateAccount = () => {
         });
       }
 
-      // 4. Redirect to login
+      // 6. Redirect to login
       navigate("/login", {
         state: { message: "Account created successfully! Please sign in." }
       });
@@ -158,15 +170,25 @@ const CreateAccount = () => {
           background-attachment: scroll;
           background-position: center center;
         }
+        .grade-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          background: rgba(34,168,106,0.12);
+          color: #1a6b43;
+          border: 1px solid rgba(34,168,106,0.25);
+          border-radius: 999px;
+          padding: 2px 10px;
+          font-size: 11px;
+          font-weight: 600;
+        }
       `}</style>
 
-      <div
-        className="createaccount-bg min-h-screen flex items-center justify-center px-4 py-16 relative"
-      >
+      <div className="createaccount-bg min-h-screen flex items-center justify-center px-4 py-16 relative">
         {/* Semi-transparent overlay */}
         <div className="absolute inset-0 bg-black/30"></div>
 
-        {/* Form container shifted slightly to the right of center */}
+        {/* Form container */}
         <div className="relative z-10 w-full max-w-sm translate-x-8 md:translate-x-12 lg:translate-x-16">
           <div
             className="card-in bg-white/95 backdrop-blur-sm w-full rounded-3xl overflow-hidden"
@@ -202,14 +224,18 @@ const CreateAccount = () => {
                   disabled={loading}
                   className={`flex-1 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 flex items-center justify-center gap-2 ${!isAdmin ? "bg-[#22a86a] text-white shadow-md" : "text-white/50 hover:text-white/80"
                     }`}
-                ><GraduationCap className="w-4 h-4 inline-block mr-1" /> Student</button>
+                >
+                  <GraduationCap className="w-4 h-4" /> Student
+                </button>
                 <button
                   type="button"
                   onClick={() => { setRole("admin"); setError(""); }}
                   disabled={loading}
                   className={`flex-1 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 flex items-center justify-center gap-2 ${isAdmin ? "bg-[#22a86a] text-white shadow-md" : "text-white/50 hover:text-white/80"
                     }`}
-                >️ Admin</button>
+                >
+                  <ShieldCheck className="w-4 h-4" /> Admin
+                </button>
               </div>
 
               {/* Step indicator */}
@@ -217,7 +243,7 @@ const CreateAccount = () => {
                 {[1, 2].map(s => (
                   <div key={s} className="flex items-center gap-2">
                     <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold transition-all duration-300 ${step === s ? "bg-[#22a86a] text-white" :
-                      step > s ? "bg-white/30 text-white" : "bg-white/10 text-white/40"
+                        step > s ? "bg-white/30 text-white" : "bg-white/10 text-white/40"
                       }`}>{s}</div>
                     {s < 2 && <div className={`w-6 h-0.5 rounded transition-all duration-300 ${step > s ? "bg-[#22a86a]" : "bg-white/20"}`} />}
                   </div>
@@ -239,9 +265,10 @@ const CreateAccount = () => {
                   : "Choose a strong password for your account."}
               </p>
 
-              {/* Step 1 — Personal Info */}
+              {/* ── Step 1 — Personal Info ── */}
               {step === 1 && (
                 <div className="step-fade flex flex-col gap-4">
+
                   {/* Full Name */}
                   <div className="flex flex-col gap-1.5">
                     <label className="text-xs font-semibold text-[#3a5a48] tracking-wide uppercase">Full Name *</label>
@@ -299,37 +326,59 @@ const CreateAccount = () => {
                     </div>
                   </div>
 
-                  {!isAdmin && (
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="flex flex-col gap-1.5">
-                        <label className="text-xs font-semibold text-[#3a5a48] tracking-wide uppercase">Grade</label>
+                  {/* ── ADMIN: Assigned Grade selector ── */}
+                  {isAdmin && (
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-semibold text-[#3a5a48] tracking-wide uppercase">
+                        Assigned Grade *
+                      </label>
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6b8f7a]">
+                          <ShieldCheck className="w-3.5 h-3.5" />
+                        </span>
                         <select
-                          value={form.grade}
-                          onChange={e => set("grade", e.target.value)}
+                          value={form.assignedGrade}
+                          onChange={e => set("assignedGrade", e.target.value)}
                           disabled={loading}
-                          className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white/90 text-[#0d2018] text-sm focus:outline-none focus:ring-2 focus:ring-[#22a86a]/40 focus:border-[#22a86a] transition-all duration-200"
+                          className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-gray-200 bg-white/90 text-[#0d2018] text-sm focus:outline-none focus:ring-2 focus:ring-[#22a86a]/40 focus:border-[#22a86a] transition-all duration-200 appearance-none"
                         >
-                          {["Grade 1", "Grade 2", "Grade 3", "Grade 4", "Grade 5", "Grade 6", "Grade 7"].map(g => (
-                            <option key={g}>{g}</option>
+                          {GRADES.map(g => (
+                            <option key={g} value={g}>{g}</option>
                           ))}
                         </select>
+                        {/* Custom dropdown arrow */}
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6b8f7a] pointer-events-none">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </span>
                       </div>
-                      <div className="flex flex-col gap-1.5">
-                        <label className="text-xs font-semibold text-[#3a5a48] tracking-wide uppercase">Student ID (Optional)</label>
-                        <input
-                          type="text" value={form.studentId}
-                          onChange={e => set("studentId", e.target.value)}
-                          placeholder="e.g. C123456"
-                          disabled={loading}
-                          className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white/90 text-[#0d2018] text-sm placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[#22a86a]/40 focus:border-[#22a86a] transition-all duration-200"
-                        />
-                      </div>
+                      <p className="text-[10px] text-[#6b8f7a] leading-relaxed">
+                        You will only be able to view and manage students in this grade.
+                      </p>
+                    </div>
+                  )}
+
+                  {/* ── STUDENT: Grade ── */}
+                  {!isAdmin && (
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-semibold text-[#3a5a48] tracking-wide uppercase">Grade</label>
+                      <select
+                        value={form.grade}
+                        onChange={e => set("grade", e.target.value)}
+                        disabled={loading}
+                        className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white/90 text-[#0d2018] text-sm focus:outline-none focus:ring-2 focus:ring-[#22a86a]/40 focus:border-[#22a86a] transition-all duration-200"
+                      >
+                        {GRADES.map(g => (
+                          <option key={g} value={g}>{g}</option>
+                        ))}
+                      </select>
                     </div>
                   )}
 
                   {error && (
                     <div className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium bg-red-50 text-red-600 border border-red-200">
-                      <span><AlertTriangle className="w-4 h-4 inline-block" /></span> {error}
+                      <AlertTriangle className="w-4 h-4 flex-shrink-0" /> {error}
                     </div>
                   )}
 
@@ -343,7 +392,7 @@ const CreateAccount = () => {
                 </div>
               )}
 
-              {/* Step 2 — Password */}
+              {/* ── Step 2 — Password ── */}
               {step === 2 && (
                 <form onSubmit={handleSubmit} className="step-fade flex flex-col gap-4">
 
@@ -377,17 +426,17 @@ const CreateAccount = () => {
                       <div className="mt-1">
                         <div className="w-full h-1 bg-gray-100 rounded-full overflow-hidden">
                           <div className={`h-full rounded-full transition-all duration-300 ${form.password.length < 6 ? "w-1/4 bg-red-400" :
-                            form.password.length < 10 ? "w-2/4 bg-orange-400" :
-                              form.password.length < 14 ? "w-3/4 bg-blue-400" : "w-full bg-[#22a86a]"
+                              form.password.length < 10 ? "w-2/4 bg-orange-400" :
+                                form.password.length < 14 ? "w-3/4 bg-blue-400" : "w-full bg-[#22a86a]"
                             }`} />
                         </div>
                         <p className={`text-[10px] mt-1 font-medium ${form.password.length < 6 ? "text-red-400" :
-                          form.password.length < 10 ? "text-orange-400" :
-                            form.password.length < 14 ? "text-blue-400" : "text-[#22a86a]"
+                            form.password.length < 10 ? "text-orange-400" :
+                              form.password.length < 14 ? "text-blue-400" : "text-[#22a86a]"
                           }`}>
                           {form.password.length < 6 ? "Too short" :
                             form.password.length < 10 ? "Weak" :
-                              form.password.length < 14 ? "Good" : "Strong "}
+                              form.password.length < 14 ? "Good" : "Strong ✓"}
                         </p>
                       </div>
                     )}
@@ -409,10 +458,10 @@ const CreateAccount = () => {
                         placeholder="Re-enter your password"
                         disabled={loading}
                         className={`w-full pl-9 pr-10 py-2.5 rounded-xl border bg-white/90 text-[#0d2018] text-sm placeholder-gray-300 focus:outline-none focus:ring-2 transition-all duration-200 ${form.confirmPassword && form.confirmPassword !== form.password
-                          ? "border-red-300 focus:ring-red-400/40 focus:border-red-400"
-                          : form.confirmPassword && form.confirmPassword === form.password
-                            ? "border-[#22a86a] focus:ring-[#22a86a]/40 focus:border-[#22a86a]"
-                            : "border-gray-200 focus:ring-[#22a86a]/40 focus:border-[#22a86a]"
+                            ? "border-red-300 focus:ring-red-400/40 focus:border-red-400"
+                            : form.confirmPassword && form.confirmPassword === form.password
+                              ? "border-[#22a86a] focus:ring-[#22a86a]/40 focus:border-[#22a86a]"
+                              : "border-gray-200 focus:ring-[#22a86a]/40 focus:border-[#22a86a]"
                           }`}
                       />
                       <button type="button" onClick={() => setShowConfirm(!showConfirm)}
@@ -427,23 +476,39 @@ const CreateAccount = () => {
                       <p className="text-[10px] text-red-400 font-medium mt-0.5">Passwords do not match</p>
                     )}
                     {form.confirmPassword && form.confirmPassword === form.password && (
-                      <p className="text-[10px] text-[#22a86a] font-medium mt-0.5">Passwords match </p>
+                      <p className="text-[10px] text-[#22a86a] font-medium mt-0.5">Passwords match ✓</p>
                     )}
                   </div>
 
-                  {/* Role badge */}
-                  <div className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium ${isAdmin
-                    ? "bg-amber-50 text-amber-700 border border-amber-200"
-                    : "bg-[#e6f7f0] text-[#1a6b43] border border-[#22a86a]/20"
+                  {/* Summary badge */}
+                  <div className={`flex items-start gap-2 px-3 py-2.5 rounded-xl text-xs font-medium ${isAdmin
+                      ? "bg-amber-50 text-amber-700 border border-amber-200"
+                      : "bg-[#e6f7f0] text-[#1a6b43] border border-[#22a86a]/20"
                     }`}>
-                    <span>{isAdmin ? "️" : <GraduationCap className="w-4 h-4" />}</span>
-                    Creating {isAdmin ? "Administrator" : "Student"} account for{" "}
-                    <span className="font-bold">{form.fullName}</span>
+                    <span className="mt-0.5 flex-shrink-0">
+                      {isAdmin ? <ShieldCheck className="w-4 h-4" /> : <GraduationCap className="w-4 h-4" />}
+                    </span>
+                    <div className="flex flex-col gap-0.5">
+                      <span>
+                        Creating <strong>{isAdmin ? "Administrator" : "Student"}</strong> account for{" "}
+                        <strong>{form.fullName || "—"}</strong>
+                      </span>
+                      {isAdmin && form.assignedGrade && (
+                        <span className="text-[10px] text-amber-600 mt-0.5">
+                          Assigned to: <strong>{form.assignedGrade}</strong> — only this grade's students will be visible.
+                        </span>
+                      )}
+                      {!isAdmin && form.grade && (
+                        <span className="text-[10px] text-[#22a86a] mt-0.5">
+                          Enrolled in: <strong>{form.grade}</strong>
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   {error && (
                     <div className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium bg-red-50 text-red-600 border border-red-200">
-                      <span><AlertTriangle className="w-4 h-4 inline-block" /></span> {error}
+                      <AlertTriangle className="w-4 h-4 flex-shrink-0" /> {error}
                     </div>
                   )}
 

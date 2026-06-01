@@ -1,6 +1,7 @@
 // src/Pages/Dashboard/Student/Events.js
 import { useState, useEffect } from "react";
 import EventServices from "../../../service/student/EventServices";
+import { useAuth } from "../../../context/Authcontext";
 
 // ── Data ──────────────────────────────────────────────────────────────────────
 const GRADES = ["Grade 1", "Grade 2", "Grade 3", "Grade 4", "Grade 5", "Grade 6", "Grade 7"];
@@ -187,6 +188,7 @@ function EventCard({ event }) {
 
 // ── Main Component (Student View) ────────────────────────────────────────────
 export default function StudentEvents() {
+    const { userProfile } = useAuth();
     const [events, setEvents] = useState([]);
     const [search, setSearch] = useState("");
     const [toast, setToast] = useState(null);
@@ -196,9 +198,9 @@ export default function StudentEvents() {
         const unsub = EventServices.subscribeToEvents((data) => {
             setEvents(data);
             setLoading(false);
-        });
+        }, userProfile?.grade);
         return () => unsub();
-    }, []);
+    }, [userProfile?.grade]);
 
     const filtered = events.filter(e =>
         !search ||

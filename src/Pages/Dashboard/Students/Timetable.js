@@ -81,9 +81,32 @@ export default function Timetable() {
       </div>
 
       {loading ? (
-        <div className="flex justify-center p-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-900"></div>
-        </div>
+        <>
+          {/* Summary Cards Skeleton */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-5 mb-6 mt-6">
+            {[1, 2, 3, 4].map(i => (
+              <div key={i} className="bg-white rounded-2xl p-4 md:p-5 shadow-sm border border-gray-100 animate-pulse">
+                <div className="h-10 w-10 bg-gray-200 rounded-xl mb-4"></div>
+                <div className="h-8 w-16 bg-gray-200 rounded mb-2"></div>
+                <div className="h-4 w-24 bg-gray-100 rounded mb-4"></div>
+                <div className="h-2 w-full bg-gray-200 rounded-full"></div>
+              </div>
+            ))}
+          </div>
+
+          {/* Toggle Block Skeleton */}
+          <div className="flex gap-1 mb-4 mt-4">
+            <div className="h-9 w-40 bg-gray-200 rounded-lg animate-pulse"></div>
+          </div>
+
+          {/* Grid Skeleton */}
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden animate-pulse">
+            <div className="h-12 bg-gray-100 border-b border-gray-200"></div>
+            <div className="space-y-1">
+              {[1, 2, 3, 4, 5].map(i => <div key={i} className="h-24 bg-gray-50 border-b border-gray-100"></div>)}
+            </div>
+          </div>
+        </>
       ) : (
         <>
           {/* Summary Cards */}

@@ -19,11 +19,23 @@ const COLLECTION = "students";
 const AdminStudentService = {
 
   // ── Fetch all students ─────────────────────────────────────────────────
-  getAllStudents: async () => {
+  getAllStudents: async (assignedGrade) => {
     try {
-      const q = query(collection(db, COLLECTION), orderBy("createdAt", "desc"));
+      let q;
+      if (assignedGrade) {
+        q = query(collection(db, COLLECTION), where("grade", "==", assignedGrade));
+      } else {
+        q = query(collection(db, COLLECTION));
+      }
       const snap = await getDocs(q);
-      return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      const students = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      // Sort in memory to avoid Firestore missing index error
+      students.sort((a, b) => {
+        const t1 = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
+        const t2 = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
+        return t2 - t1;
+      });
+      return students;
     } catch (error) {
       console.error("getAllStudents error:", error);
       return [];
@@ -31,11 +43,22 @@ const AdminStudentService = {
   },
 
   // ── Subscribe to all students (real-time) ─────────────────────────────
-  subscribeToStudents: (callback) => {
+  subscribeToStudents: (callback, assignedGrade) => {
     try {
-      const q = query(collection(db, COLLECTION), orderBy("createdAt", "desc"));
+      let q;
+      if (assignedGrade) {
+        q = query(collection(db, COLLECTION), where("grade", "==", assignedGrade));
+      } else {
+        q = query(collection(db, COLLECTION));
+      }
       return onSnapshot(q, (snap) => {
         const students = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        // Sort in memory to avoid Firestore missing index error
+        students.sort((a, b) => {
+          const t1 = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
+          const t2 = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
+          return t2 - t1;
+        });
         callback(students);
       }, (error) => {
         console.error("subscribeToStudents error:", error);

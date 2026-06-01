@@ -6,6 +6,7 @@
 
 import { useState, useEffect } from "react";
 import AdminStudentService from "../../../service/admin/StudentManagementService"
+import { useAuth } from "../../../context/Authcontext";
 
 // ── Constants ─────────────────────────────────────────────────────────────
 const TERMS = ["Term 1", "Term 2", "Term 3"];
@@ -370,6 +371,7 @@ function RecordDrawer({ student, term, onClose }) {
 
 // ── Main Component ────────────────────────────────────────────────────────
 export default function AcademicRecords() {
+  const { userProfile } = useAuth();
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -386,9 +388,9 @@ export default function AcademicRecords() {
     const unsub = AdminStudentService.subscribeToStudents((data) => {
       setStudents(data);
       setLoading(false);
-    });
+    }, userProfile?.assignedGrade);
     return () => unsub();
-  }, []);
+  }, [userProfile?.assignedGrade]);
 
   const showToast = (msg, type = "success") => {
     setToast({ msg, type });
